@@ -1,0 +1,103 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xkubernetesproviders.init.upbound.io
+spec:
+  compositeTypeRef:
+    apiVersion: init.upbound.io/v1alpha1
+    kind: xKubernetesProvider
+  resources:
+    - name: provider
+      base:
+        apiVersion: pkg.crossplane.io/v1
+        kind: Provider
+        spec:
+          runtimeConfigRef:
+            apiVersion: pkg.crossplane.io/v1beta1
+            kind: DeploymentRuntimeConfig
+            name: provider-kubernetes
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.package.name
+          toFieldPath: spec.package
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+          transforms:
+            - type: match
+              match:
+                patterns:
+                  - type: regexp
+                    regexp: '.*'
+                    result: provider-kubernetes
+      readinessChecks:
+        - type: None
+
+    - name: runtimeconfig
+      base:
+        apiVersion: pkg.crossplane.io/v1beta1
+        kind: DeploymentRuntimeConfig
+        spec:
+          serviceAccountTemplate:
+            metadata:
+              name: provider-kubernetes
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+          transforms:
+            - type: match
+              match:
+                patterns:
+                  - type: regexp
+                    regexp: '.*'
+                    result: provider-kubernetes
+      readinessChecks:
+        - type: None
+
+    - name: clusterrolebinding
+      base:
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        subjects:
+        - kind: ServiceAccount
+          name: provider-kubernetes
+          namespace: crossplane-system
+        roleRef:
+          kind: ClusterRole
+          name: controlplane-impersonator:base
+          apiGroup: rbac.authorization.k8s.io
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+          transforms:
+            - type: match
+              match:
+                patterns:
+                  - type: regexp
+                    regexp: '.*'
+                    result: provider-kubernetes-admin-binding
+      readinessChecks:
+        - type: None
+
+    - name: defaultproviderconfig
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: ProviderConfig
+        spec:
+          credentials:
+            source: InjectedIdentity
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+          transforms:
+            - type: match
+              match:
+                patterns:
+                  - type: regexp
+                    regexp: '.*'
+                    result: default
+      readinessChecks:
+        - type: None

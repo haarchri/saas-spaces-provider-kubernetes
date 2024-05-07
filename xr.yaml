@@ -1,0 +1,7 @@
+apiVersion: init.upbound.io/v1alpha1
+kind: KubernetesProvider
+metadata:
+  name: kubernetesprovider
+spec:
+  package:
+    name: xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.13.0

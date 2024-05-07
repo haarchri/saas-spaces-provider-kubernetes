@@ -1,0 +1,30 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xkubernetesproviders.init.upbound.io
+spec:
+  defaultCompositeDeletePolicy: Foreground
+  group: init.upbound.io
+  names:
+    kind: xKubernetesProvider
+    plural: xkubernetesproviders
+  claimNames:
+    kind: KubernetesProvider
+    plural: kubernetesproviders
+  versions:
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              package:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    default: "xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.13.0"
